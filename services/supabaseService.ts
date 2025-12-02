@@ -731,19 +731,30 @@ class SupabaseService {
 
   async createTrade(trade: Omit<Trade, 'id' | 'createdAt'>): Promise<Trade | null> {
     try {
+      const payload = {
+        ...this.mapTradeToDb(trade),
+        created_at: new Date().toISOString(),
+      };
+      
+      console.log('Creating trade with payload:', JSON.stringify(payload, null, 2));
+      
       const response = await fetch(
         `${this.baseUrl}/rest/v1/${TABLES.TRADES}`,
         {
           method: 'POST',
           headers: this.headers,
-          body: JSON.stringify({
-            ...this.mapTradeToDb(trade),
-            created_at: new Date().toISOString(),
-          }),
+          body: JSON.stringify(payload),
         }
       );
-      if (!response.ok) throw new Error('Failed to create trade');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Trade creation failed:', response.status, errorText);
+        throw new Error(`Failed to create trade: ${errorText}`);
+      }
+      
       const data = await response.json();
+      console.log('Trade created successfully:', data);
       return this.mapTradeFromDb(data[0]);
     } catch (error) {
       console.error('Error creating trade:', error);

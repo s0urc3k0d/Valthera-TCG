@@ -243,7 +243,7 @@ const CardDetail: React.FC<CardDetailProps> = ({
                 </button>
               )}
               
-              {onMarkForTrade && ownedCount > 1 && (
+              {onMarkForTrade && ownedCount > 0 && (
                 <button
                   onClick={() => onMarkForTrade(card.id)}
                   className={`flex-1 py-3 px-4 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
