@@ -469,6 +469,36 @@ class SupabaseService {
     }
   }
 
+  // Give booster to user
+  async giveBooster(userId: string, count: number = 1): Promise<boolean> {
+    try {
+      // Get current user data
+      const user = await this.getUserById(userId);
+      if (!user) return false;
+      
+      const currentBoosters = user.availableBoosters || 0;
+      const newBoosters = Math.min(currentBoosters + count, 10); // Max 10 boosters
+      
+      const response = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.USERS}?id=eq.${userId}`,
+        {
+          method: 'PATCH',
+          headers: this.headers,
+          body: JSON.stringify({
+            available_boosters: newBoosters,
+            updated_at: new Date().toISOString(),
+          }),
+        }
+      );
+      
+      console.log(`🎁 Gave ${count} booster(s) to user ${userId}. New total: ${newBoosters}`);
+      return response.ok;
+    } catch (error) {
+      console.error('Error giving booster:', error);
+      return false;
+    }
+  }
+
   // Ban/Unban user
   async banUser(userId: string, ban: boolean): Promise<boolean> {
     try {

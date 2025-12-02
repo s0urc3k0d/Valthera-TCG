@@ -713,6 +713,28 @@ Statut: ${isAdmin ? 'Administrateur' : user.isBanned ? 'Banni' : 'Membre'}
                             >
                               👁️ Voir
                             </button>
+                            <button
+                              onClick={async () => {
+                                const countStr = prompt('Combien de boosters voulez-vous donner ?', '1');
+                                if (countStr) {
+                                  const count = parseInt(countStr, 10);
+                                  if (count > 0 && count <= 10) {
+                                    const success = await supabaseService.giveBooster(user.id, count);
+                                    if (success) {
+                                      setMsg(`${count} booster(s) donné(s) à ${user.username}`);
+                                      setRefreshKey(k => k + 1);
+                                    } else {
+                                      setMsg('Erreur lors de l\'ajout du booster');
+                                    }
+                                  } else {
+                                    alert('Veuillez entrer un nombre entre 1 et 10');
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-legendary/30 hover:bg-legendary/50 text-legendary rounded-lg text-xs transition-colors"
+                            >
+                              🎁 Booster
+                            </button>
                             {!isAdmin && (
                               <button
                                 onClick={async () => {
