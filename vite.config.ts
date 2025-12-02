@@ -7,6 +7,11 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
   },
+  preview: {
+    port: 3004,
+    host: '0.0.0.0',
+    allowedHosts: ['valtheratcg.sourcekod.fr', 'www.valtheratcg.sourcekod.fr'],
+  },
   plugins: [react()],
   resolve: {
     alias: {
