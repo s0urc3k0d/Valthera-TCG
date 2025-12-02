@@ -566,24 +566,18 @@ class SupabaseService {
   // Get all users with cards for trade (for marketplace)
   async getUsersWithCardsForTrade(): Promise<User[]> {
     try {
-      // Get all users from Supabase
+      // Get only users who have cards for trade (filter in query)
       const response = await fetch(
-        `${this.baseUrl}/rest/v1/${TABLES.USERS}?select=*`,
+        `${this.baseUrl}/rest/v1/${TABLES.USERS}?cards_for_trade=not.is.null&select=*`,
         { headers: this.headers }
       );
       if (!response.ok) throw new Error('Failed to fetch users with trades');
       const data = await response.json();
       
-      const usersWithTrades: User[] = [];
-      
-      for (const dbUser of data) {
-        const user = this.mapUserFromDb(dbUser);
-        // Vérifier que cardsForTrade est un tableau non vide
-        if (user && Array.isArray(user.cardsForTrade) && user.cardsForTrade.length > 0) {
-          user.collection = await this.getUserCollection(user.id);
-          usersWithTrades.push(user);
-        }
-      }
+      // Map and filter users with non-empty cardsForTrade arrays
+      const usersWithTrades = data
+        .map((dbUser: Record<string, unknown>) => this.mapUserFromDb(dbUser))
+        .filter((user: User | null) => user && Array.isArray(user.cardsForTrade) && user.cardsForTrade.length > 0);
       
       console.log(`📦 Found ${usersWithTrades.length} users with cards for trade`);
       return usersWithTrades;
@@ -594,6 +588,29 @@ class SupabaseService {
   }
 
   // ==================== COLLECTIONS ====================
+
+  // Get card count for all users in a single query (for admin panel)
+  async getUsersCardCounts(): Promise<Record<string, number>> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.COLLECTIONS}?select=user_id`,
+        { headers: this.headers }
+      );
+      if (!response.ok) throw new Error('Failed to fetch card counts');
+      const data = await response.json();
+      
+      // Count cards per user
+      const counts: Record<string, number> = {};
+      for (const item of data) {
+        const userId = item.user_id;
+        counts[userId] = (counts[userId] || 0) + 1;
+      }
+      return counts;
+    } catch (error) {
+      console.error('Error fetching card counts:', error);
+      return {};
+    }
+  }
 
   async getUserCollection(userId: string): Promise<string[]> {
     try {

@@ -78,20 +78,20 @@ export const AdminPanel = () => {
     loadData();
   }, [refreshKey]);
   
-  // Charger les utilisateurs depuis Supabase
+  // Charger les utilisateurs depuis Supabase (sans les collections pour la performance)
   useEffect(() => {
     const loadUsers = async () => {
       setLoadingUsers(true);
       try {
-        const users = await supabaseService.getUsers();
-        // Charger les collections pour chaque utilisateur
-        const usersWithCollections = await Promise.all(
-          users.map(async (user) => {
-            const collection = await supabaseService.getUserCollection(user.id);
-            return { ...user, collection };
-          })
-        );
-        setSupabaseUsers(usersWithCollections);
+        const [users, cardCounts] = await Promise.all([
+          supabaseService.getUsers(),
+          supabaseService.getUsersCardCounts()
+        ]);
+        // Assigner le nombre de cartes à chaque utilisateur
+        setSupabaseUsers(users.map(user => ({ 
+          ...user, 
+          collection: Array(cardCounts[user.id] || 0).fill('') // Fake array pour le compteur
+        })));
       } catch (error) {
         console.error('Error loading users from Supabase:', error);
       } finally {
@@ -100,6 +100,23 @@ export const AdminPanel = () => {
     };
     loadUsers();
   }, [refreshKey]);
+  
+  // Cache des collections chargées
+  const [loadedCollections, setLoadedCollections] = useState<Record<string, string[]>>({});
+  
+  // Charger la collection d'un utilisateur à la demande
+  const loadUserCollection = async (userId: string): Promise<string[]> => {
+    if (loadedCollections[userId]) {
+      return loadedCollections[userId];
+    }
+    const collection = await supabaseService.getUserCollection(userId);
+    setLoadedCollections(prev => ({ ...prev, [userId]: collection }));
+    // Mettre à jour l'utilisateur dans la liste
+    setSupabaseUsers(prev => prev.map(u => 
+      u.id === userId ? { ...u, collection } : u
+    ));
+    return collection;
+  };
 
   const filteredUsers = useMemo(() => {
     if (!userSearchTerm) return supabaseUsers;
