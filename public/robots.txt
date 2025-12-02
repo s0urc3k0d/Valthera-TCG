@@ -1,0 +1,14 @@
+# Valthera TCG - robots.txt
+# https://valthera-tcg.app
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://valthera-tcg.app/sitemap.xml
+
+# Disallow admin routes
+Disallow: /admin
+
+# Allow social sharing
+Allow: /collection/*

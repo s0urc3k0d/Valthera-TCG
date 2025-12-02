@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Valthera TCG - Collectionnez les cartes de l'univers medieval fantasy de Valthera. Ouvrez des boosters quotidiens, échangez avec d'autres joueurs et complétez votre collection !" />
+    <meta name="keywords" content="Valthera, TCG, cartes à collectionner, jeu de cartes, medieval, fantasy, collection, booster, échange" />
+    <meta name="author" content="Valthera Studios" />
+    <meta name="theme-color" content="#1A0F08" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://valthera-tcg.app/" />
+    <meta property="og:title" content="Valthera TCG - L'univers de cartes medieval fantasy" />
+    <meta property="og:description" content="Collectionnez les cartes de l'univers de Valthera. Ouvrez des boosters quotidiens, échangez avec d'autres joueurs et complétez votre collection !" />
+    <meta property="og:image" content="https://valthera-tcg.app/og-image.png" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Valthera TCG" />
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://valthera-tcg.app/" />
+    <meta name="twitter:title" content="Valthera TCG - L'univers de cartes medieval fantasy" />
+    <meta name="twitter:description" content="Collectionnez les cartes de l'univers de Valthera. Ouvrez des boosters quotidiens et échangez avec d'autres joueurs !" />
+    <meta name="twitter:image" content="https://valthera-tcg.app/og-image.png" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://valthera-tcg.app/" />
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Valthera TCG - Jeu de Cartes à Collectionner Medieval Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Palette Valthera - Medieval Fantasy
+              valthera: {
+                950: '#0D0705',
+                900: '#1A0F08',
+                800: '#2D1B0E',
+                700: '#4A2C17',
+                600: '#6B3D1F',
+                500: '#8B5A2B',
+                400: '#C9A227',
+                300: '#D4AF37',
+                200: '#E8D5A3',
+                100: '#F5ECD7',
+              },
+              blood: {
+                600: '#8B0000',
+                500: '#A52A2A',
+                400: '#CD5C5C',
+              },
+              forest: {
+                700: '#1B4D3E',
+                600: '#2E5A4B',
+                500: '#3D7A5A',
+              },
+              steel: {
+                600: '#4A5568',
+                500: '#6B7280',
+                400: '#9CA3AF',
+              },
+              rarity: {
+                common: '#9CA3AF',
+                uncommon: '#22C55E',
+                rare: '#3B82F6',
+                epic: '#A855F7',
+                legendary: '#D4AF37',
+              }
+            },
+            fontFamily: {
+              medieval: ['Cinzel', 'serif'],
+              body: ['Crimson Text', 'Georgia', 'serif'],
+            },
+            animation: {
+              'shake': 'shake 0.82s cubic-bezier(.36,.07,.19,.97) both',
+              'float': 'float 3s ease-in-out infinite',
+              'shine': 'shine 3s infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'card-reveal': 'cardReveal 0.6s ease-out',
+              'slide-up': 'slideUp 0.3s ease-out',
+              'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+            },
+            keyframes: {
+              shake: {
+                '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              shine: {
+                '0%': { backgroundPosition: '200% center' },
+                '100%': { backgroundPosition: '-200% center' },
+              },
+              glow: {
+                '0%': { boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' },
+                '100%': { boxShadow: '0 0 40px rgba(212, 175, 55, 0.6)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              cardReveal: {
+                '0%': { opacity: '0', transform: 'scale(0.8) rotateY(-10deg)' },
+                '100%': { opacity: '1', transform: 'scale(1) rotateY(0)' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              pulseGold: {
+                '0%, 100%': { boxShadow: '0 0 10px rgba(212, 175, 55, 0.2)' },
+                '50%': { boxShadow: '0 0 25px rgba(212, 175, 55, 0.5)' },
+              }
+            },
+          },
+        },
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background: linear-gradient(180deg, #0D0705 0%, #1A0F08 50%, #2D1B0E 100%);
+        color: #F5ECD7;
+        min-height: 100vh;
+        font-family: 'Crimson Text', Georgia, serif;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Cinzel', serif;
+      }
+      .card-preserve-3d {
+        transform-style: preserve-3d;
+      }
+      .card-backface-hidden {
+        backface-visibility: hidden;
+      }
+      .rotate-y-180 {
+        transform: rotateY(180deg);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1A0F08;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4A2C17;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #6B3D1F;
+      }
+      
+      /* Card Holographic Effects */
+      .card-legendary {
+        animation: glow 2s ease-in-out infinite alternate, legendaryShimmer 3s linear infinite;
+      }
+      
+      .card-epic {
+        animation: epicGlow 2s ease-in-out infinite alternate;
+      }
+      
+      @keyframes legendaryShimmer {
+        0% { filter: hue-rotate(0deg) brightness(1); }
+        50% { filter: hue-rotate(15deg) brightness(1.1); }
+        100% { filter: hue-rotate(0deg) brightness(1); }
+      }
+      
+      @keyframes epicGlow {
+        0% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+        100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.7); }
+      }
+      
+      /* Sparkle effect for legendary cards */
+      .sparkle-container {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      
+      .sparkle {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: radial-gradient(circle, #fff 0%, rgba(255, 215, 0, 0.8) 50%, transparent 100%);
+        border-radius: 50%;
+        animation: sparkleAnim 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes sparkleAnim {
+        0%, 100% { 
+          opacity: 0; 
+          transform: scale(0) rotate(0deg); 
+        }
+        50% { 
+          opacity: 1; 
+          transform: scale(1) rotate(180deg); 
+        }
+      }
+      
+      /* Holographic rainbow effect - animation only, no cursor tracking */
+      .holographic-overlay {
+        background: linear-gradient(
+          125deg,
+          rgba(255, 215, 0, 0.3) 0%,
+          rgba(255, 140, 0, 0.25) 15%,
+          rgba(255, 69, 0, 0.2) 30%,
+          rgba(138, 43, 226, 0.25) 50%,
+          rgba(75, 0, 130, 0.2) 70%,
+          rgba(255, 215, 0, 0.3) 100%
+        );
+        background-size: 400% 400%;
+        animation: holoRainbow 3s ease-in-out infinite;
+        mix-blend-mode: overlay;
+      }
+      
+      /* Epic shimmer effect */
+      .epic-shimmer {
+        background: linear-gradient(
+          135deg,
+          rgba(147, 51, 234, 0.1) 0%,
+          rgba(168, 85, 247, 0.4) 25%,
+          rgba(192, 132, 252, 0.3) 50%,
+          rgba(168, 85, 247, 0.4) 75%,
+          rgba(147, 51, 234, 0.1) 100%
+        );
+        background-size: 200% 200%;
+        animation: epicShimmer 2s ease-in-out infinite;
+        mix-blend-mode: overlay;
+      }
+      
+      @keyframes epicShimmer {
+        0% { background-position: 200% 200%; }
+        100% { background-position: 0% 0%; }
+      }
+      
+      @keyframes holoRainbow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      /* Slide in animation for notification panel */
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      .animate-slide-in-right {
+        animation: slideInRight 0.3s ease-out forwards;
+      }
+      
+      /* Perspective for 3D effects */
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@7.9.6",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react": "https://esm.sh/react@19.0.0"
+  }
+}
+</script>
+    
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Valthera TCG",
+      "description": "Jeu de cartes à collectionner dans l'univers medieval fantasy de Valthera",
+      "url": "https://valthera-tcg.app",
+      "applicationCategory": "Game",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Valthera Studios"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

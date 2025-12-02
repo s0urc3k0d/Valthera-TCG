@@ -1,0 +1,5 @@
+{
+  "name": "Mythic TCG Platform",
+  "description": "Une plateforme de jeu de cartes à collectionner (TCG) complète avec gestion de collection, ouverture quotidienne de boosters, et panneau d'administration assisté par IA.",
+  "requestFramePermissions": []
+}
