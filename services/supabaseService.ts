@@ -499,36 +499,34 @@ class SupabaseService {
           method: 'PATCH',
           headers: this.headers,
           body: JSON.stringify({
-            favorite_cards: cardIds, // Using favorite_cards temporarily for cards_for_trade
+            cards_for_trade: cardIds,
             updated_at: new Date().toISOString(),
           }),
         }
       );
       
-      // Also save to localStorage as backup
-      const storageKey = `valthera_for_trade_${userId}`;
-      localStorage.setItem(storageKey, JSON.stringify(cardIds));
+      if (!response.ok) {
+        console.error('Failed to update cards for trade:', await response.text());
+        return false;
+      }
       
-      return response.ok;
+      return true;
     } catch (error) {
       console.error('Error updating cards for trade:', error);
-      // Fallback to localStorage
-      const storageKey = `valthera_for_trade_${userId}`;
-      localStorage.setItem(storageKey, JSON.stringify(cardIds));
-      return true;
+      return false;
     }
   }
 
-  // Get cards for trade for a specific user
+  // Get cards for trade for a specific user (from Supabase)
   async getCardsForTrade(userId: string): Promise<string[]> {
     try {
-      // Try to get from localStorage first (most reliable)
-      const storageKey = `valthera_for_trade_${userId}`;
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-      return [];
+      const response = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.USERS}?id=eq.${userId}&select=cards_for_trade`,
+        { headers: this.headers }
+      );
+      if (!response.ok) throw new Error('Failed to fetch cards for trade');
+      const data = await response.json();
+      return (data[0]?.cards_for_trade as string[]) || [];
     } catch (error) {
       console.error('Error fetching cards for trade:', error);
       return [];
@@ -539,18 +537,25 @@ class SupabaseService {
   async getUsersWithCardsForTrade(): Promise<User[]> {
     try {
       // Get all users from Supabase
-      const users = await this.getUsers();
+      const response = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.USERS}?select=*`,
+        { headers: this.headers }
+      );
+      if (!response.ok) throw new Error('Failed to fetch users with trades');
+      const data = await response.json();
+      
       const usersWithTrades: User[] = [];
       
-      for (const user of users) {
-        const cardsForTrade = await this.getCardsForTrade(user.id);
-        if (cardsForTrade.length > 0) {
-          user.cardsForTrade = cardsForTrade;
+      for (const dbUser of data) {
+        const user = this.mapUserFromDb(dbUser);
+        // Vérifier que cardsForTrade est un tableau non vide
+        if (user && Array.isArray(user.cardsForTrade) && user.cardsForTrade.length > 0) {
           user.collection = await this.getUserCollection(user.id);
           usersWithTrades.push(user);
         }
       }
       
+      console.log(`📦 Found ${usersWithTrades.length} users with cards for trade`);
       return usersWithTrades;
     } catch (error) {
       console.error('Error fetching users with trades:', error);

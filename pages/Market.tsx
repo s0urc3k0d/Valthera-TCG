@@ -13,7 +13,7 @@ interface MarketListing {
   quantity: number;
 }
 
-type TabType = 'browse' | 'my-offers' | 'received' | 'history';
+type TabType = 'browse' | 'my-cards' | 'my-offers' | 'received' | 'history';
 
 export const Market: React.FC = () => {
   const { user: currentUser, updateUser, isAuthenticated } = useAuth();
@@ -39,6 +39,7 @@ export const Market: React.FC = () => {
   // Data from Supabase
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [allSeries, setAllSeries] = useState<Series[]>([]);
+  const [myCardsForTrade, setMyCardsForTrade] = useState<string[]>([]);
   
   // Load cards and series from Supabase
   useEffect(() => {
@@ -57,6 +58,17 @@ export const Market: React.FC = () => {
     loadBaseData();
   }, []);
 
+  // Load my cards for trade
+  useEffect(() => {
+    const loadMyCardsForTrade = async () => {
+      if (currentUser) {
+        const cardsForTrade = await supabaseService.getCardsForTrade(currentUser.id);
+        setMyCardsForTrade(cardsForTrade);
+      }
+    };
+    loadMyCardsForTrade();
+  }, [currentUser?.id]);
+
   // My tradeable cards
   const myTradeableCards = useMemo(() => {
     if (!currentUser) return [];
@@ -66,8 +78,10 @@ export const Market: React.FC = () => {
   }, [allCards, currentUser]);
 
   useEffect(() => {
-    loadData();
-  }, [currentUser?.id]);
+    if (allCards.length > 0) {
+      loadData();
+    }
+  }, [currentUser?.id, allCards.length]);
 
   const loadData = async () => {
     if (!currentUser) return;
@@ -248,6 +262,19 @@ export const Market: React.FC = () => {
   const pendingSentCount = trades.filter(t => t.fromUserId === currentUser?.id && t.status === TradeStatus.PENDING).length;
   const pendingReceivedCount = trades.filter(t => t.toUserId === currentUser?.id && t.status === TradeStatus.PENDING).length;
   const historyCount = trades.filter(t => t.status !== TradeStatus.PENDING).length;
+  const myCardsCount = myCardsForTrade.length;
+
+  // Remove card from trade
+  const removeFromTrade = async (cardId: string) => {
+    if (!currentUser) return;
+    
+    const newCardsForTrade = myCardsForTrade.filter(id => id !== cardId);
+    setMyCardsForTrade(newCardsForTrade);
+    await supabaseService.updateCardsForTrade(currentUser.id, newCardsForTrade);
+    toast.success('Carte retirée', 'La carte n\'est plus disponible à l\'échange');
+    // Reload market data to update listings
+    loadData();
+  };
 
   if (!isAuthenticated) {
     return (
@@ -298,7 +325,8 @@ export const Market: React.FC = () => {
       <div className="flex gap-2 overflow-x-auto pb-2">
         {[
           { id: 'browse' as TabType, label: '🛒 Marché', count: listings.length },
-          { id: 'my-offers' as TabType, label: '📤 Mes offres', count: pendingSentCount },
+          { id: 'my-cards' as TabType, label: '🏷️ Mes cartes', count: myCardsCount },
+          { id: 'my-offers' as TabType, label: '📤 Offres envoyées', count: pendingSentCount },
           { id: 'received' as TabType, label: '📥 Reçues', count: pendingReceivedCount },
           { id: 'history' as TabType, label: '📜 Historique', count: historyCount },
         ].map(tab => (
@@ -438,6 +466,70 @@ export const Market: React.FC = () => {
               {' '}et marquez-les comme "À échanger" (🔄)
             </p>
           </div>
+        </div>
+      )}
+
+      {/* My Cards Tab */}
+      {activeTab === 'my-cards' && (
+        <div className="space-y-6">
+          {myCardsForTrade.length === 0 ? (
+            <div className="text-center py-20 bg-valthera-800/30 rounded-xl border border-valthera-700 border-dashed">
+              <div className="text-5xl mb-4">🏷️</div>
+              <h3 className="text-xl font-medieval text-valthera-300 mb-2">Aucune carte en vente</h3>
+              <p className="text-valthera-500 mb-4">
+                Vous n'avez pas encore mis de cartes à disposition pour l'échange.
+              </p>
+              <Link 
+                to="/collection" 
+                className="inline-block px-6 py-3 bg-valthera-600 hover:bg-valthera-500 text-valthera-100 rounded-lg transition-colors"
+              >
+                📚 Aller à ma collection
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="bg-valthera-800/50 rounded-xl p-4 border border-valthera-700">
+                <p className="text-valthera-400 text-sm text-center">
+                  🔄 Vous avez <strong className="text-valthera-200">{myCardsForTrade.length}</strong> carte{myCardsForTrade.length > 1 ? 's' : ''} disponible{myCardsForTrade.length > 1 ? 's' : ''} à l'échange
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {myCardsForTrade.map((cardId, index) => {
+                  const card = allCards.find(c => c.id === cardId);
+                  if (!card) return null;
+                  
+                  return (
+                    <div 
+                      key={`${cardId}-${index}`}
+                      className="bg-valthera-800 rounded-xl p-3 border border-valthera-700 flex flex-col items-center gap-2"
+                    >
+                      <div 
+                        className="cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => setSelectedCard(card)}
+                      >
+                        <CardView card={card} size="sm" />
+                      </div>
+                      
+                      <div className="w-full text-center">
+                        <h3 className="text-xs font-bold text-valthera-200 truncate">{card.name}</h3>
+                        <p className={`text-xs ${getRarityColor(card.rarity)}`}>
+                          {card.rarity}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => removeFromTrade(cardId)}
+                        className="w-full px-2 py-1.5 bg-blood-600/30 hover:bg-blood-600/50 text-blood-400 rounded text-xs font-medium transition-colors"
+                      >
+                        ❌ Retirer
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
