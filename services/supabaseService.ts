@@ -606,6 +606,89 @@ class SupabaseService {
     }
   }
 
+  async removeFromCollection(userId: string, cardId: string): Promise<boolean> {
+    try {
+      // Supprimer UNE seule entrée (pas toutes les copies)
+      // On récupère d'abord l'ID de l'entrée à supprimer
+      const response = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.COLLECTIONS}?user_id=eq.${userId}&card_id=eq.${cardId}&limit=1&select=id`,
+        { headers: this.headers }
+      );
+      
+      if (!response.ok) return false;
+      const data = await response.json();
+      
+      if (data.length === 0) return false;
+      
+      // Supprimer cette entrée spécifique
+      const deleteResponse = await fetch(
+        `${this.baseUrl}/rest/v1/${TABLES.COLLECTIONS}?id=eq.${data[0].id}`,
+        {
+          method: 'DELETE',
+          headers: this.headers,
+        }
+      );
+      
+      return deleteResponse.ok;
+    } catch (error) {
+      console.error('Error removing from collection:', error);
+      return false;
+    }
+  }
+
+  async updateUserCollection(userId: string, newCollection: string[]): Promise<boolean> {
+    try {
+      // Récupérer la collection actuelle
+      const currentCollection = await this.getUserCollection(userId);
+      
+      // Calculer les cartes à ajouter et à retirer
+      const currentCounts = new Map<string, number>();
+      currentCollection.forEach(id => {
+        currentCounts.set(id, (currentCounts.get(id) || 0) + 1);
+      });
+      
+      const newCounts = new Map<string, number>();
+      newCollection.forEach(id => {
+        newCounts.set(id, (newCounts.get(id) || 0) + 1);
+      });
+      
+      // Cartes à ajouter
+      const toAdd: string[] = [];
+      newCounts.forEach((count, cardId) => {
+        const currentCount = currentCounts.get(cardId) || 0;
+        const diff = count - currentCount;
+        for (let i = 0; i < diff; i++) {
+          toAdd.push(cardId);
+        }
+      });
+      
+      // Cartes à retirer
+      const toRemove: string[] = [];
+      currentCounts.forEach((count, cardId) => {
+        const newCount = newCounts.get(cardId) || 0;
+        const diff = count - newCount;
+        for (let i = 0; i < diff; i++) {
+          toRemove.push(cardId);
+        }
+      });
+      
+      // Exécuter les opérations
+      if (toAdd.length > 0) {
+        await this.addToCollection(userId, toAdd);
+      }
+      
+      for (const cardId of toRemove) {
+        await this.removeFromCollection(userId, cardId);
+      }
+      
+      console.log(`📦 Collection updated for ${userId}: +${toAdd.length} -${toRemove.length}`);
+      return true;
+    } catch (error) {
+      console.error('Error updating user collection:', error);
+      return false;
+    }
+  }
+
   // Clean up ghost data (cards that don't exist in the cards table)
   async cleanupUserCollection(userId: string): Promise<{ removed: number; kept: number }> {
     try {

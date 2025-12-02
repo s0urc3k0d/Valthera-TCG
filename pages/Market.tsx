@@ -208,20 +208,50 @@ export const Market: React.FC = () => {
     if (!currentUser) return;
 
     try {
+      // 1. Mettre à jour le statut du trade
       await supabaseService.updateTradeStatus(trade.id, TradeStatus.ACCEPTED);
 
-      // Exchange cards
+      // 2. Mettre à jour MA collection (celui qui accepte = toUser)
+      // Je reçois les offeredCards et je donne les requestedCards
       const myNewCollection = currentUser.collection
         .filter(id => !trade.requestedCards.some(tc => tc.cardId === id))
         .concat(trade.offeredCards.map(tc => tc.cardId));
 
       await updateUser({ ...currentUser, collection: myNewCollection });
 
+      // 3. Mettre à jour la collection de l'AUTRE utilisateur (celui qui a proposé = fromUser)
+      // Il reçoit les requestedCards et perd les offeredCards
+      const otherUserCollection = await supabaseService.getUserCollection(trade.fromUserId);
+      const otherUserNewCollection = otherUserCollection
+        .filter(id => !trade.offeredCards.some(tc => tc.cardId === id))
+        .concat(trade.requestedCards.map(tc => tc.cardId));
+
+      await supabaseService.updateUserCollection(trade.fromUserId, otherUserNewCollection);
+
+      // 4. Retirer les cartes échangées des listes "à échanger" des deux utilisateurs
+      const myCardsForTrade = await supabaseService.getCardsForTrade(currentUser.id);
+      const myNewCardsForTrade = myCardsForTrade.filter(id => 
+        !trade.requestedCards.some(tc => tc.cardId === id)
+      );
+      await supabaseService.updateCardsForTrade(currentUser.id, myNewCardsForTrade);
+
+      const otherCardsForTrade = await supabaseService.getCardsForTrade(trade.fromUserId);
+      const otherNewCardsForTrade = otherCardsForTrade.filter(id => 
+        !trade.offeredCards.some(tc => tc.cardId === id)
+      );
+      await supabaseService.updateCardsForTrade(trade.fromUserId, otherNewCardsForTrade);
+
       setTrades(prev => prev.map(t => 
         t.id === trade.id ? { ...t, status: TradeStatus.ACCEPTED } : t
       ));
 
+      // Recharger mes cartes à échanger
+      setMyCardsForTrade(myNewCardsForTrade);
+
       toast.success('Échange accepté !', 'Les cartes ont été échangées');
+      
+      // Recharger les données du marché
+      loadData();
     } catch (error) {
       console.error('Error accepting trade:', error);
       toast.error('Erreur', 'Impossible d\'accepter l\'échange');
