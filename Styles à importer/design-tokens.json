@@ -1,0 +1,30 @@
+{
+  "colors": {
+    "valthera": {
+      "950": "#0D0705",
+      "900": "#1A0F08",
+      "800": "#2D1B0E",
+      "700": "#4A2C17",
+      "600": "#6B3D1F",
+      "500": "#8B5A2B",
+      "400": "#C9A227",
+      "300": "#D4AF37",
+      "200": "#E8D5A3",
+      "100": "#F5ECD7"
+    },
+    "blood": { "600": "#8B0000", "500": "#A52A2A", "400": "#CD5C5C" },
+    "forest": { "700": "#1B4D3E", "600": "#2E5A4B", "500": "#3D7A5A" },
+    "steel": { "600": "#4A5568", "500": "#6B7280", "400": "#9CA3AF" },
+    "rarity": { "common": "#9CA3AF", "uncommon": "#22C55E", "rare": "#3B82F6", "epic": "#A855F7", "legendary": "#D4AF37" }
+  },
+  "gradients": {
+    "global": "linear-gradient(180deg, #0D0705 0%, #1A0F08 50%, #2D1B0E 100%)",
+    "holographic": "linear-gradient(125deg, rgba(255,215,0,0.3) 0%, rgba(255,140,0,0.25) 15%, rgba(255,69,0,0.2) 30%, rgba(138,43,226,0.25) 50%, rgba(75,0,130,0.2) 70%, rgba(255,215,0,0.3) 100%)"
+  },
+  "fonts": {
+    "display": "Cinzel, serif",
+    "body": "Crimson Text, Georgia, serif",
+    "import": "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+  },
+  "animations": ["shake","float","shine","glow","fade-in","card-reveal","slide-up","pulse-gold","legendaryShimmer","epicGlow","sparkleAnim","holoRainbow"]
+}
