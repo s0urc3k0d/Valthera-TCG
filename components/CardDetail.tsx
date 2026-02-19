@@ -130,7 +130,7 @@ const CardDetail: React.FC<CardDetailProps> = ({
             >
               {/* Front */}
               <div 
-                className="absolute inset-0 backface-hidden"
+                className={`absolute inset-0 backface-hidden rounded-lg border-2 ${colors.border} overflow-hidden shadow-xl ${colors.glow}`}
                 style={{ backfaceVisibility: 'hidden' }}
               >
                 <img 
@@ -138,6 +138,26 @@ const CardDetail: React.FC<CardDetailProps> = ({
                   alt={card.name}
                   className="w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+
+                <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                  <span className="text-xs px-2 py-1 rounded bg-black/50 border border-white/20 text-stone-100">
+                    {typeIcons[card.cardType]} {card.cardType}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded bg-black/50 border border-white/20 ${colors.text}`}>
+                    {card.rarity}
+                  </span>
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="font-medieval text-xl text-stone-100 leading-tight">{card.name}</h3>
+                  {card.title && <p className="text-valthera-300 italic text-sm mt-1 line-clamp-1">{card.title}</p>}
+                  <p className="text-stone-200 text-sm mt-2 line-clamp-3">{card.description}</p>
+                  <div className="mt-3 flex items-center gap-3 text-sm">
+                    <span className="px-2 py-1 rounded bg-blood-900/70 border border-blood-700 text-blood-300">⚔️ {card.attack}</span>
+                    <span className="px-2 py-1 rounded bg-blue-900/70 border border-blue-700 text-blue-300">🛡️ {card.defense}</span>
+                  </div>
+                </div>
                 {/* Overlay Effects */}
                 {card.rarity === Rarity.LEGENDARY && (
                   <div className="absolute inset-0 bg-gradient-to-t from-valthera-600/20 via-transparent to-valthera-400/10 animate-pulse" />
@@ -146,7 +166,7 @@ const CardDetail: React.FC<CardDetailProps> = ({
               
               {/* Back (Lore) */}
               <div 
-                className="absolute inset-0 backface-hidden bg-valthera-900 flex items-center justify-center p-6 rotate-y-180"
+                className={`absolute inset-0 backface-hidden bg-gradient-to-b ${colors.bg} border-2 ${colors.border} rounded-lg flex items-center justify-center p-6 rotate-y-180`}
                 style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
               >
                 <div className="text-center">

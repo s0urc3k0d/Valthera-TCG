@@ -127,24 +127,24 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
           {/* Card Body */}
           <div className={`flex-1 flex flex-col justify-between relative z-30 ${size === 'xs' ? 'p-1.5' : 'p-3'}`}>
             <div>
-              <h3 className={`font-medieval font-bold uppercase tracking-wider ${rarityText[card.rarity]} ${
+                <h3 className={`font-medieval font-bold uppercase tracking-wider line-clamp-2 ${rarityText[card.rarity]} ${
                 size === 'xs' ? 'text-[8px] leading-tight' :
                 size === 'sm' ? 'text-xs' : 'text-base'
               }`}>
                 {card.name}
               </h3>
-              {card.title && size !== 'xs' && (
-                <p className={`italic text-valthera-400 ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
-                  {card.title}
-                </p>
-              )}
+                {size !== 'xs' && (
+                  <p className={`italic text-valthera-400 min-h-[16px] ${size === 'sm' ? 'text-[10px] line-clamp-1' : 'text-xs line-clamp-1'}`}>
+                    {card.title || ' '}
+                  </p>
+                )}
               {size !== 'xs' && (
                 <div className={`mt-1 ${rarityBg[card.rarity]} rounded px-2 py-0.5 inline-block`}>
                   <span className={`text-[10px] font-medium ${rarityText[card.rarity]}`}>{card.rarity}</span>
                 </div>
               )}
               {size !== 'xs' && (
-                <p className={`text-valthera-200 mt-2 font-body leading-relaxed ${size === 'sm' ? 'text-[9px] leading-tight line-clamp-2' : 'text-xs line-clamp-3'}`}>
+                  <p className={`text-valthera-200 mt-2 font-body leading-relaxed min-h-[38px] ${size === 'sm' ? 'text-[9px] leading-tight line-clamp-2' : 'text-xs line-clamp-3'}`}>
                   {card.description}
                 </p>
               )}

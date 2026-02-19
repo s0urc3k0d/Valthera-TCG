@@ -9,19 +9,33 @@ interface AdminStatsProps {
 export const AdminStats: React.FC<AdminStatsProps> = ({ users }) => {
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [allSeries, setAllSeries] = useState<Series[]>([]);
+  const [userCollections, setUserCollections] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
 
-  // Load cards and series from Supabase
+  // Load cards, series and real user collections
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [cards, series] = await Promise.all([
+        const [cards, series, collections] = await Promise.all([
           supabaseService.getCards(),
           supabaseService.getSeries(),
+          Promise.all(
+            users.map(async (user) => {
+              const collection = await supabaseService.getUserCollection(user.id);
+              return [user.id, collection] as const;
+            })
+          ),
         ]);
+
+        const mappedCollections = collections.reduce<Record<string, string[]>>((acc, [userId, collection]) => {
+          acc[userId] = collection;
+          return acc;
+        }, {});
+
         setAllCards(cards);
         setAllSeries(series);
+        setUserCollections(mappedCollections);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -29,14 +43,14 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users }) => {
       }
     };
     loadData();
-  }, []);
+  }, [users]);
 
   // Statistiques globales
   const stats = useMemo(() => {
     // Cartes les plus collectionnées
     const cardPopularity = new Map<string, number>();
     users.forEach(user => {
-      const collection = user.collection || [];
+      const collection = userCollections[user.id] || [];
       collection.forEach(cardId => {
         cardPopularity.set(cardId, (cardPopularity.get(cardId) || 0) + 1);
       });
@@ -86,7 +100,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users }) => {
     };
 
     users.forEach(user => {
-      const collection = user.collection || [];
+      const collection = userCollections[user.id] || [];
       collection.forEach(cardId => {
         const card = allCards.find(c => c.id === cardId);
         if (card) {
@@ -104,7 +118,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users }) => {
     }).length;
 
     // Total cartes dans toutes les collections
-    const totalCardsCollected = users.reduce((sum, u) => sum + (u.collection?.length || 0), 0);
+    const totalCardsCollected = users.reduce((sum, user) => sum + (userCollections[user.id]?.length || 0), 0);
 
     // Moyenne de cartes par utilisateur
     const avgCardsPerUser = users.length > 0 
@@ -123,7 +137,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users }) => {
       seriesPopularity,
       rarityDistribution,
     };
-  }, [users, allCards, allSeries]);
+  }, [users, allCards, allSeries, userCollections]);
 
   const getRarityColor = (rarity: Rarity) => {
     switch (rarity) {
