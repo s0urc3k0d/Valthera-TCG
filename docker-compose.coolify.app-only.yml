@@ -61,7 +61,7 @@ services:
       api:
         condition: service_started
     expose:
-      - "8080"
+      - "80"
     read_only: true
     tmpfs:
       - /var/cache/nginx
@@ -70,7 +70,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/"]
       interval: 15s
       timeout: 5s
       retries: 8
