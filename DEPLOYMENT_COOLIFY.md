@@ -10,7 +10,7 @@ Ce guide décrit un déploiement complet sur Coolify avec 4 services:
 ## 1) Prérequis
 
 - Domaine frontend prêt (exemple: `valtheratcg.sourcekod.fr`)
-- Sous-domaine API prêt (exemple: `api.valthera.sourcekod.fr`)
+- Sous-domaine API prêt (exemple: `api.valtheratcg.sourcekod.fr`)
 - Projet Coolify créé
 - Données PostgreSQL déjà importées (ou plan d'import prêt)
 - Buckets MinIO existants:
@@ -44,7 +44,7 @@ Ce guide décrit un déploiement complet sur Coolify avec 4 services:
 - Build: Dockerfile
 - Dockerfile path: `server/Dockerfile`
 - Port interne: `4000`
-- Domaine public: `https://api.valthera.sourcekod.fr` (ou ton sous-domaine)
+- Domaine public: `https://api.valtheratcg.sourcekod.fr` (ou ton sous-domaine)
 
 Variables d'environnement API:
 
@@ -69,12 +69,12 @@ Variables d'environnement API:
 - Source: ce repository
 - Build: Dockerfile
 - Dockerfile path: `Dockerfile`
-- Port interne: `8080`
+- Port interne: `80`
 - Domaine public: `https://valtheratcg.sourcekod.fr`
 
 Build variables frontend:
 
-- `VITE_API_BASE_URL=https://api.valthera.sourcekod.fr`
+- `VITE_API_BASE_URL=https://api.valtheratcg.sourcekod.fr`
 - `VITE_AUTH0_DOMAIN=<tenant>.auth0.com`
 - `VITE_AUTH0_CLIENT_ID=<client-id>`
 - `VITE_AUTH0_AUDIENCE=https://<tenant>.auth0.com/api/v2/`
@@ -95,8 +95,8 @@ Variables legacy (optionnelles pendant transition uniquement):
 
 ## 4.1 API
 
-- `GET https://api.valthera.sourcekod.fr/health` doit répondre `{"status":"ok",...}`
-- `GET https://api.valthera.sourcekod.fr/` doit répondre `service: valthera-api`
+- `GET https://api.valtheratcg.sourcekod.fr/health` doit répondre `{"status":"ok",...}`
+- `GET https://api.valtheratcg.sourcekod.fr/` doit répondre `service: valthera-api`
 
 ## 4.2 Frontend
 
@@ -108,7 +108,7 @@ Variables legacy (optionnelles pendant transition uniquement):
 
 - Créer/modifier une carte avec upload image dans l'admin
 - Vérifier que l'URL stockée commence par:
-  - `https://api.valthera.sourcekod.fr/uploads/card-images/...`
+  - `https://api.valtheratcg.sourcekod.fr/uploads/card-images/...`
 - Vérifier présence de l'objet dans MinIO
 
 ## 5) Migration images base64 vers MinIO (si pas déjà fait)
@@ -172,7 +172,7 @@ MINIO_USE_SSL=false
 ## 8.2 Frontend (`valthera-frontend`)
 
 ```env
-VITE_API_BASE_URL=https://api.valthera.sourcekod.fr
+VITE_API_BASE_URL=https://api.valtheratcg.sourcekod.fr
 
 VITE_AUTH0_DOMAIN=CHANGE_ME_TENANT.auth0.com
 VITE_AUTH0_CLIENT_ID=CHANGE_ME_AUTH0_CLIENT_ID
@@ -247,7 +247,7 @@ Note (mode `app-only` avec PostgreSQL externe):
 
 - `read_only: true` sur frontend et API
 - `tmpfs` pour répertoires runtime temporaires
-- `cap_drop: [ALL]` sur frontend et API
+- `cap_drop: [ALL]` sur API (et frontend dans la variante full)
 - `security_opt: no-new-privileges:true`
 - réseau interne isolé (`internal: true`) pour PostgreSQL/MinIO
 - volumes persistants dédiés (`postgres_data`, `minio_data`, `uploads_data`)

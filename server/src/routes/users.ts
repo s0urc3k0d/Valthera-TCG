@@ -31,6 +31,36 @@ const updateUserSchema = z.object({
   isPublicProfile: z.boolean().optional(),
 });
 
+const userColumnsBase = `id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
+        last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
+        favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
+        is_public_profile AS "isPublicProfile"`;
+
+const userColumnsWithShareCode = `${userColumnsBase}, share_code AS "shareCode",
+        created_at AS "createdAt", updated_at AS "updatedAt"`;
+
+const userColumnsWithoutShareCode = `${userColumnsBase}, NULL::text AS "shareCode",
+        created_at AS "createdAt", updated_at AS "updatedAt"`;
+
+let hasShareCodeColumn: boolean | undefined;
+
+const getUserSelectColumns = async () => {
+  if (hasShareCodeColumn === undefined) {
+    const rows = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'users'
+          AND column_name = 'share_code'
+      ) AS "exists"`
+    );
+    hasShareCodeColumn = Boolean(rows[0]?.exists);
+  }
+
+  return hasShareCodeColumn ? userColumnsWithShareCode : userColumnsWithoutShareCode;
+};
+
 const resolveActor = async (req: AuthenticatedRequest): Promise<{ userId: string; isAdmin: boolean } | null> => {
   if (!config.authEnabled) {
     return { userId: req.params.id || 'no-auth', isAdmin: true };
@@ -59,13 +89,11 @@ const resolveActor = async (req: AuthenticatedRequest): Promise<{ userId: string
 export const usersRouter = Router();
 
 usersRouter.get('/', async (req, res) => {
+  const userSelect = await getUserSelectColumns();
+
   if (req.query.withCardsForTrade === 'true') {
     const rows = await query(
-      `SELECT id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-              last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-              favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-              is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-              created_at AS "createdAt", updated_at AS "updatedAt"
+      `SELECT ${userSelect}
        FROM users
        WHERE cards_for_trade IS NOT NULL
          AND array_length(cards_for_trade, 1) > 0`
@@ -74,11 +102,7 @@ usersRouter.get('/', async (req, res) => {
   }
 
   const rows = await query(
-    `SELECT id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-            last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-            favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-            is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-            created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${userSelect}
      FROM users`
   );
   res.json(rows);
@@ -100,12 +124,10 @@ usersRouter.get('/card-counts/all', async (_req, res) => {
 });
 
 usersRouter.get('/by-username/:username', async (req, res) => {
+  const userSelect = await getUserSelectColumns();
+
   const rows = await query(
-    `SELECT id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-            last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-            favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-            is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-            created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${userSelect}
      FROM users
      WHERE username = $1
      LIMIT 1`,
@@ -120,14 +142,12 @@ usersRouter.get('/by-username/:username', async (req, res) => {
 });
 
 usersRouter.get('/by-email/:email', async (req, res) => {
+  const userSelect = await getUserSelectColumns();
+
   const rows = await query(
-    `SELECT id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-            last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-            favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-            is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-            created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${userSelect}
      FROM users
-     WHERE email = $1
+     WHERE lower(email) = lower($1)
      LIMIT 1`,
     [decodeURIComponent(req.params.email)]
   );
@@ -140,12 +160,10 @@ usersRouter.get('/by-email/:email', async (req, res) => {
 });
 
 usersRouter.get('/:id', async (req, res) => {
+  const userSelect = await getUserSelectColumns();
+
   const rows = await query(
-    `SELECT id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-            last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-            favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-            is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-            created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${userSelect}
      FROM users
      WHERE id = $1
      LIMIT 1`,
@@ -181,14 +199,12 @@ usersRouter.post('/', requireAuth, async (req: AuthenticatedRequest, res) => {
     }
   }
 
+  const userSelect = await getUserSelectColumns();
+
   const rows = await query(
     `INSERT INTO users (username, email, avatar, is_admin, last_booster_date, available_boosters, favorite_cards, cards_for_trade, is_public_profile)
      VALUES ($1, $2, $3, $4, $5, COALESCE($6, 0), COALESCE($7::text[], '{}'::text[]), COALESCE($8::text[], '{}'::text[]), COALESCE($9, true))
-     RETURNING id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-               last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-               favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-               is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-               created_at AS "createdAt", updated_at AS "updatedAt"`,
+     RETURNING ${userSelect}`,
     [
       body.username,
       body.email || null,
@@ -224,6 +240,8 @@ usersRouter.patch('/:id', requireAuth, requireUserOrAdmin('id'), async (req: Aut
   const safeIsAdmin = actor.isAdmin ? body.isAdmin ?? null : null;
   const safeIsBanned = actor.isAdmin ? body.isBanned ?? null : null;
 
+  const userSelect = await getUserSelectColumns();
+
   const rows = await query(
     `UPDATE users
      SET username = COALESCE($2, username),
@@ -238,11 +256,7 @@ usersRouter.patch('/:id', requireAuth, requireUserOrAdmin('id'), async (req: Aut
          is_public_profile = COALESCE($11, is_public_profile),
          updated_at = NOW()
      WHERE id = $1
-     RETURNING id, username, email, avatar, is_admin AS "isAdmin", is_banned AS "isBanned",
-               last_booster_date AS "lastBoosterDate", available_boosters AS "availableBoosters",
-               favorite_cards AS "favoriteCards", cards_for_trade AS "cardsForTrade",
-               is_public_profile AS "isPublicProfile", share_code AS "shareCode",
-               created_at AS "createdAt", updated_at AS "updatedAt"`,
+    RETURNING ${userSelect}`,
     [
       req.params.id,
       body.username ?? null,
