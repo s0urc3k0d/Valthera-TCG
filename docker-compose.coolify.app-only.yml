@@ -36,7 +36,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:4000/health | grep -q '\"status\":\"ok\"'"]
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:4000/ | grep -q '\"service\":\"valthera-api\"'"]
       interval: 15s
       timeout: 5s
       retries: 8
@@ -59,7 +59,7 @@ services:
     init: true
     depends_on:
       api:
-        condition: service_healthy
+        condition: service_started
     expose:
       - "8080"
     read_only: true

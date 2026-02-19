@@ -238,6 +238,11 @@ Ne pas mettre les 2 domaines sur le même service.
 - `frontend`: `/`
 - `api`: `/health`
 
+Note (mode `app-only` avec PostgreSQL externe):
+
+- Le compose `app-only` utilise un healthcheck API de **liveness** (`/`) pour éviter les faux négatifs au boot.
+- La vérification de dépendances externes (DB/MinIO) se fait ensuite via tests manuels (`/health` + upload image).
+
 ## 9.4 Ce qui est déjà sécurisé dans le compose fourni
 
 - `read_only: true` sur frontend et API
