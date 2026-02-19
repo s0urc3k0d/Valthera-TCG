@@ -197,3 +197,77 @@ POSTGRES_PASSWORD=CHANGE_ME_DB_PASSWORD
 MINIO_ROOT_USER=CHANGE_ME_MINIO_ROOT_USER
 MINIO_ROOT_PASSWORD=CHANGE_ME_MINIO_ROOT_PASSWORD
 ```
+
+## 9) Option recommandée: déploiement unique Docker Compose (multi-conteneurs)
+
+Si tu veux tout gérer dans **un seul déploiement Coolify** (frontend + API + PostgreSQL + MinIO), utilise:
+
+- Compose: [docker-compose.coolify.yml](docker-compose.coolify.yml)
+- Variables: [.env.coolify.example](.env.coolify.example)
+
+Si PostgreSQL et MinIO existent déjà dans d'autres services Coolify (cas actuel), utilise plutôt:
+
+- Compose app-only: [docker-compose.coolify.app-only.yml](docker-compose.coolify.app-only.yml)
+- Variables app-only: [.env.coolify.app-only.example](.env.coolify.app-only.example)
+
+## 9.1 Étapes Coolify (pas à pas)
+
+1. Créer une nouvelle application dans Coolify
+2. Build Pack: `Docker Compose`
+3. Pointer le repo `Valthera-TCG` sur la branche voulue
+4. Dans le fichier compose, utiliser `docker-compose.coolify.yml`
+5. Ajouter les variables d'environnement depuis `.env.coolify.example` (remplacer `CHANGE_ME_*`)
+6. Sauvegarder
+
+Pour l'architecture actuelle (PostgreSQL + MinIO externes), faire la même procédure avec:
+
+- `docker-compose.coolify.app-only.yml`
+- `.env.coolify.app-only.example`
+
+## 9.2 Domaines à renseigner dans Coolify
+
+Dans l'écran Domaines de l'app compose:
+
+- `frontend` → `https://valtheratcg.sourcekod.fr`
+- `api` → `https://api.valtheratcg.sourcekod.fr`
+
+Ne pas mettre les 2 domaines sur le même service.
+
+## 9.3 Healthchecks conseillés
+
+- `frontend`: `/`
+- `api`: `/health`
+
+## 9.4 Ce qui est déjà sécurisé dans le compose fourni
+
+- `read_only: true` sur frontend et API
+- `tmpfs` pour répertoires runtime temporaires
+- `cap_drop: [ALL]` sur frontend et API
+- `security_opt: no-new-privileges:true`
+- réseau interne isolé (`internal: true`) pour PostgreSQL/MinIO
+- volumes persistants dédiés (`postgres_data`, `minio_data`, `uploads_data`)
+
+## 9.5 Points sécurité à faire après mise en prod
+
+- Remplacer tous les secrets `CHANGE_ME_*`
+- Utiliser un utilisateur MinIO dédié API (pas `MINIO_ROOT_USER`)
+- Restreindre `ADMIN_EMAILS` aux adresses strictement nécessaires
+- Vérifier que `CORS_ORIGIN` = domaine frontend exact
+- Activer rotation périodique des secrets DB/MinIO/Auth0
+
+## 10) Redis: pertinent maintenant ?
+
+Oui, **potentiellement pertinent**, mais ce n'est pas prioritaire avant stabilisation complète du déploiement.
+
+Redis devient utile si tu veux:
+
+- cache de réponses fréquentes (cartes/séries) pour réduire la charge PostgreSQL
+- rate limiting distribué côté API
+- gestion de sessions ou invalidation de tokens côté serveur
+- file d'attente (jobs asynchrones: thumbnails, notifications batch)
+
+Pour l'état actuel de Valthera, la priorité reste:
+
+1. stabiliser frontend + API + Postgres + MinIO
+2. mesurer (latence API, CPU DB, endpoints les plus appelés)
+3. ajouter Redis seulement sur les endpoints réellement coûteux
