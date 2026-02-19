@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardType, Rarity, Series, CollectionStats as Stats } from '../types';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { CardView } from '../components/CardView';
 import CollectionStats from '../components/CollectionStats';
 import CardDetail from '../components/CardDetail';

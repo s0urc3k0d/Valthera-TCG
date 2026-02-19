@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import apiService from '../services/apiService';
 
 interface ImageUploadProps {
   value: string;
@@ -42,6 +43,32 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     e.stopPropagation();
   }, []);
 
+  const resolveStorageTarget = (mode: 'card' | 'cover' | 'square') => {
+    if (mode === 'cover') {
+      return { bucket: 'series-covers', prefix: 'covers' };
+    }
+
+    if (mode === 'square') {
+      return { bucket: 'avatars', prefix: 'avatars' };
+    }
+
+    return { bucket: 'card-images', prefix: 'cards' };
+  };
+
+  const getFileExtension = (file: File): string => {
+    const fromName = file.name.split('.').pop()?.toLowerCase();
+    if (fromName && ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(fromName)) {
+      return fromName;
+    }
+
+    const mime = file.type.toLowerCase();
+    if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+    if (mime.includes('png')) return 'png';
+    if (mime.includes('webp')) return 'webp';
+    if (mime.includes('gif')) return 'gif';
+    return 'bin';
+  };
+
   const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('Le fichier doit être une image');
@@ -57,20 +84,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setError(null);
 
     try {
-      // Convert to base64 for local storage
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        onChange(base64);
-        setIsLoading(false);
-      };
-      reader.onerror = () => {
-        setError('Erreur lors de la lecture du fichier');
-        setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
+      const { bucket, prefix } = resolveStorageTarget(aspectRatio);
+      const extension = getFileExtension(file);
+      const uniqueId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const objectPath = `${prefix}/${uniqueId}.${extension}`;
+
+      const uploadedUrl = await apiService.uploadImage(bucket, objectPath, file);
+
+      if (!uploadedUrl) {
+        throw new Error('Échec de l\'upload');
+      }
+
+      onChange(uploadedUrl);
+      setIsLoading(false);
     } catch (err) {
-      setError('Erreur lors du traitement de l\'image');
+      setError('Erreur lors de l\'upload de l\'image');
       setIsLoading(false);
     }
   };

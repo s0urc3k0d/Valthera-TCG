@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Rarity, Series } from '../types';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { CardView } from '../components/CardView';
 import CardDetail from '../components/CardDetail';
 import { useToast } from '../components/ToastProvider';

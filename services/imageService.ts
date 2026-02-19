@@ -1,6 +1,12 @@
 // Service d'upload et d'optimisation d'images pour Valthera TCG
 
-import { SUPABASE_CONFIG, STORAGE_BUCKETS } from '../config/supabase';
+import apiService from './apiService';
+
+const STORAGE_BUCKETS = {
+  CARD_IMAGES: 'card-images',
+  AVATARS: 'avatars',
+  SERIES_COVERS: 'series-covers',
+};
 
 interface ImageUploadResult {
   success: boolean;
@@ -23,17 +29,6 @@ const DEFAULT_OPTIONS: ImageOptions = {
 };
 
 class ImageService {
-  private baseUrl: string;
-  private headers: Record<string, string>;
-
-  constructor() {
-    this.baseUrl = SUPABASE_CONFIG.url;
-    this.headers = {
-      'apikey': SUPABASE_CONFIG.anonKey,
-      'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
-    };
-  }
-
   /**
    * Compresse et optimise une image
    */
@@ -122,27 +117,13 @@ class ImageService {
       
       const fileName = `${cardId}.webp`;
       const path = `cards/${fileName}`;
-      
-      // Upload vers Supabase Storage
-      const response = await fetch(
-        `${this.baseUrl}/storage/v1/object/${STORAGE_BUCKETS.CARD_IMAGES}/${path}`,
-        {
-          method: 'POST',
-          headers: {
-            ...this.headers,
-            'Content-Type': 'image/webp',
-            'x-upsert': 'true', // Remplacer si existe
-          },
-          body: compressedBlob,
-        }
-      );
-      
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Upload échoué: ${error}`);
+
+      const uploadFile = new File([compressedBlob], fileName, { type: 'image/webp' });
+      const url = await apiService.uploadImage(STORAGE_BUCKETS.CARD_IMAGES, path, uploadFile);
+      if (!url) {
+        throw new Error('Upload échoué');
       }
-      
-      const url = this.getPublicUrl(STORAGE_BUCKETS.CARD_IMAGES, path);
+
       return { success: true, url };
       
     } catch (error) {
@@ -169,26 +150,13 @@ class ImageService {
       
       const fileName = `${userId}.webp`;
       const path = `avatars/${fileName}`;
-      
-      const response = await fetch(
-        `${this.baseUrl}/storage/v1/object/${STORAGE_BUCKETS.AVATARS}/${path}`,
-        {
-          method: 'POST',
-          headers: {
-            ...this.headers,
-            'Content-Type': 'image/webp',
-            'x-upsert': 'true',
-          },
-          body: compressedBlob,
-        }
-      );
-      
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Upload échoué: ${error}`);
+
+      const uploadFile = new File([compressedBlob], fileName, { type: 'image/webp' });
+      const url = await apiService.uploadImage(STORAGE_BUCKETS.AVATARS, path, uploadFile);
+      if (!url) {
+        throw new Error('Upload échoué');
       }
-      
-      const url = this.getPublicUrl(STORAGE_BUCKETS.AVATARS, path);
+
       return { success: true, url };
       
     } catch (error) {
@@ -214,26 +182,13 @@ class ImageService {
       
       const fileName = `${seriesId}.webp`;
       const path = `covers/${fileName}`;
-      
-      const response = await fetch(
-        `${this.baseUrl}/storage/v1/object/${STORAGE_BUCKETS.SERIES_COVERS}/${path}`,
-        {
-          method: 'POST',
-          headers: {
-            ...this.headers,
-            'Content-Type': 'image/webp',
-            'x-upsert': 'true',
-          },
-          body: compressedBlob,
-        }
-      );
-      
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Upload échoué: ${error}`);
+
+      const uploadFile = new File([compressedBlob], fileName, { type: 'image/webp' });
+      const url = await apiService.uploadImage(STORAGE_BUCKETS.SERIES_COVERS, path, uploadFile);
+      if (!url) {
+        throw new Error('Upload échoué');
       }
-      
-      const url = this.getPublicUrl(STORAGE_BUCKETS.SERIES_COVERS, path);
+
       return { success: true, url };
       
     } catch (error) {
@@ -250,14 +205,7 @@ class ImageService {
    */
   async deleteImage(bucket: string, path: string): Promise<boolean> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/storage/v1/object/${bucket}/${path}`,
-        {
-          method: 'DELETE',
-          headers: this.headers,
-        }
-      );
-      return response.ok;
+      return await apiService.deleteImage(bucket, path);
     } catch (error) {
       console.error('Error deleting image:', error);
       return false;
@@ -268,18 +216,19 @@ class ImageService {
    * Génère l'URL publique d'une image
    */
   getPublicUrl(bucket: string, path: string): string {
-    return `${this.baseUrl}/storage/v1/object/public/${bucket}/${path}`;
+    return apiService.getImageUrl(bucket, `/uploads/${bucket}/${path}`);
   }
 
   /**
    * Génère une URL avec transformation (si activé dans Supabase)
    */
   getTransformedUrl(bucket: string, path: string, width: number, height?: number): string {
+    const imageUrl = this.getPublicUrl(bucket, path);
     const params = new URLSearchParams({
       width: width.toString(),
-      ...(height && { height: height.toString() }),
+      ...(height ? { height: height.toString() } : {}),
     });
-    return `${this.baseUrl}/storage/v1/render/image/public/${bucket}/${path}?${params}`;
+    return `${imageUrl}?${params}`;
   }
 
   /**

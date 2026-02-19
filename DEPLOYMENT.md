@@ -374,3 +374,11 @@ curl http://127.0.0.1:3004
 - [ ] Configurer Auth0 avec les URLs de production
 - [ ] Exécuter le script SQL `database/add-available-boosters.sql` dans Supabase
 - [ ] Tester l'application
+
+---
+
+## 🐳 Déploiement Coolify + Migration hors Supabase
+
+Le guide de migration et de déploiement Docker/Coolify est disponible ici :
+
+- [MIGRATION_SUPABASE_TO_POSTGRESQL.md](MIGRATION_SUPABASE_TO_POSTGRESQL.md)

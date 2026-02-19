@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { Rarity, CardType, User, Card, Series } from '../types';
 
 interface AdminStatsProps {

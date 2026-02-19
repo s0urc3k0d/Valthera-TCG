@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { Auth0Client } from '@auth0/auth0-spa-js';
 import { AUTH0_CONFIG, isAdminEmail } from '../config/auth0';
 import { User } from '../types';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 
 // Initialiser le client Auth0
 const auth0Client = new Auth0Client({
@@ -10,6 +10,7 @@ const auth0Client = new Auth0Client({
   clientId: AUTH0_CONFIG.clientId,
   authorizationParams: {
     redirect_uri: AUTH0_CONFIG.redirectUri,
+    audience: AUTH0_CONFIG.audience || undefined,
   },
   cacheLocation: 'localstorage',
 });
@@ -59,6 +60,7 @@ interface AuthProviderProps {
 // Storage keys
 const USER_KEY = 'valthera_user';
 const AUTH0_USER_KEY = 'valthera_auth0_user';
+const AUTH0_ACCESS_TOKEN_KEY = 'valthera_auth0_access_token';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
@@ -130,6 +132,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('🔐 Auth0 user:', auth0User);
           
           if (auth0User?.email) {
+            const accessToken = await auth0Client.getTokenSilently().catch(() => null);
+            if (accessToken) {
+              localStorage.setItem(AUTH0_ACCESS_TOKEN_KEY, accessToken);
+            }
+
             // Stocker l'utilisateur Auth0
             localStorage.setItem(AUTH0_USER_KEY, JSON.stringify(auth0User));
             
@@ -169,6 +176,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🔐 Not authenticated, clearing storage');
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(AUTH0_USER_KEY);
+        localStorage.removeItem(AUTH0_ACCESS_TOKEN_KEY);
         setState({
           isAuthenticated: false,
           isLoading: false,
@@ -218,6 +226,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const auth0User = await auth0Client.getUser() as Auth0UserInfo | undefined;
       
       if (auth0User?.email) {
+        const accessToken = await auth0Client.getTokenSilently().catch(() => null);
+        if (accessToken) {
+          localStorage.setItem(AUTH0_ACCESS_TOKEN_KEY, accessToken);
+        }
+
         localStorage.setItem(AUTH0_USER_KEY, JSON.stringify(auth0User));
         
         // Vérifier si l'utilisateur existe dans Supabase
@@ -318,6 +331,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(AUTH0_USER_KEY);
+    localStorage.removeItem(AUTH0_ACCESS_TOKEN_KEY);
     
     auth0Client.logout({
       logoutParams: {

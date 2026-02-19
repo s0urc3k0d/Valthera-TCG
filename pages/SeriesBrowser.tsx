@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { CardView } from '../components/CardView';
 import { Series, Card, CardType } from '../types';
 

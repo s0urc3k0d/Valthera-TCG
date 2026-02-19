@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ToastProvider';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { CardView } from '../components/CardView';
 import CardDetail from '../components/CardDetail';
 import { Card, User, Rarity, Series, Trade, TradeStatus } from '../types';
@@ -208,53 +208,20 @@ export const Market: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      // 1. Mettre à jour le statut du trade
-      await supabaseService.updateTradeStatus(trade.id, TradeStatus.ACCEPTED);
+      const acceptedTrade = await supabaseService.acceptTradeAtomic(trade.id);
+      if (!acceptedTrade) {
+        throw new Error('Atomic accept failed');
+      }
 
-      // Helper pour retirer N exemplaires d'une carte d'une collection
-      const removeCardsFromCollection = (collection: string[], cardsToRemove: { cardId: string; quantity: number }[]): string[] => {
-        const result = [...collection];
-        for (const item of cardsToRemove) {
-          for (let i = 0; i < item.quantity; i++) {
-            const index = result.indexOf(item.cardId);
-            if (index !== -1) {
-              result.splice(index, 1);
-            }
-          }
-        }
-        return result;
-      };
+      const refreshedCollection = await supabaseService.getUserCollection(currentUser.id);
+      await updateUser({ ...currentUser, collection: refreshedCollection });
 
-      // 2. Mettre à jour MA collection (celui qui accepte = toUser)
-      // Je reçois les offeredCards et je donne les requestedCards
-      let myNewCollection = removeCardsFromCollection(currentUser.collection, trade.requestedCards);
-      myNewCollection = myNewCollection.concat(trade.offeredCards.map(tc => tc.cardId));
-
-      await updateUser({ ...currentUser, collection: myNewCollection });
-
-      // 3. Mettre à jour la collection de l'AUTRE utilisateur (celui qui a proposé = fromUser)
-      // Il reçoit les requestedCards et perd les offeredCards
-      const otherUserCollection = await supabaseService.getUserCollection(trade.fromUserId);
-      let otherUserNewCollection = removeCardsFromCollection(otherUserCollection, trade.offeredCards);
-      otherUserNewCollection = otherUserNewCollection.concat(trade.requestedCards.map(tc => tc.cardId));
-
-      await supabaseService.updateUserCollection(trade.fromUserId, otherUserNewCollection);
-
-      // 4. Retirer UNE occurrence des cartes échangées des listes "à échanger"
-      const myCardsForTrade = await supabaseService.getCardsForTrade(currentUser.id);
-      const myNewCardsForTrade = removeCardsFromCollection(myCardsForTrade, trade.requestedCards);
-      await supabaseService.updateCardsForTrade(currentUser.id, myNewCardsForTrade);
-
-      const otherCardsForTrade = await supabaseService.getCardsForTrade(trade.fromUserId);
-      const otherNewCardsForTrade = removeCardsFromCollection(otherCardsForTrade, trade.offeredCards);
-      await supabaseService.updateCardsForTrade(trade.fromUserId, otherNewCardsForTrade);
+      const refreshedCardsForTrade = await supabaseService.getCardsForTrade(currentUser.id);
+      setMyCardsForTrade(refreshedCardsForTrade);
 
       setTrades(prev => prev.map(t => 
         t.id === trade.id ? { ...t, status: TradeStatus.ACCEPTED } : t
       ));
-
-      // Recharger mes cartes à échanger
-      setMyCardsForTrade(myNewCardsForTrade);
 
       toast.success('Échange accepté !', 'Les cartes ont été échangées');
       

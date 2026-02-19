@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { Rarity, Card } from '../types';
 
 interface QRCodeShareProps {

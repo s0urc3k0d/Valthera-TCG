@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import supabaseService from '../services/supabaseService';
+import supabaseService from '../services/apiService';
 import { CardView } from '../components/CardView';
 import { Card, Rarity, Series, User } from '../types';
 import CardDetail from '../components/CardDetail';

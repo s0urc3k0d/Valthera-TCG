@@ -43,6 +43,37 @@ npm run build
 
 Le site sera accessible sur `http://localhost:3000`
 
+## 🐳 Déploiement Docker (Coolify)
+
+Le projet est maintenant prêt pour un déploiement via `Dockerfile` (Coolify ou autre plateforme Docker):
+
+- Dockerfile: [Dockerfile](Dockerfile)
+- Nginx container config: [nginx/app.conf](nginx/app.conf)
+- Variables d'environnement exemple: [.env.example](.env.example)
+
+Variable clé côté frontend build:
+
+- `VITE_API_BASE_URL` (URL de l'API PostgreSQL déployée)
+
+## 🔄 Migration Supabase → PostgreSQL + Storage
+
+Le runbook complet de migration (base PostgreSQL + buckets storage) est ici :
+
+- [MIGRATION_SUPABASE_TO_POSTGRESQL.md](MIGRATION_SUPABASE_TO_POSTGRESQL.md)
+
+## 🧩 Architecture cible (Coolify)
+
+- Architecture de déploiement front + api + postgres:
+	- [COOLIFY_TARGET_ARCHITECTURE.md](COOLIFY_TARGET_ARCHITECTURE.md)
+
+- Backend API PostgreSQL (en cours de migration frontend):
+	- [server/package.json](server/package.json)
+	- [server/src/index.ts](server/src/index.ts)
+
+Validation du flux atomique d'acceptation d'échange (API + PostgreSQL éphémère Docker):
+
+- `cd server && npm run test:integration:trade`
+
 ## 🛠️ Stack technique
 
 - **Frontend** : React 19 + TypeScript
