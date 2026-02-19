@@ -15,7 +15,11 @@ import { requireAuth } from './middleware/auth.js';
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(cors({ origin: config.corsOrigin === '*' ? true : config.corsOrigin }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/uploads', mediaPublicRouter);
