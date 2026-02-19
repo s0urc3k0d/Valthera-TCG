@@ -25,7 +25,29 @@ async function verifyToken(token: string): Promise<AppAuthClaims> {
     audience: config.auth0Audience,
   });
 
-  return payload as AppAuthClaims;
+  const claims = payload as AppAuthClaims;
+
+  if (!claims.email) {
+    try {
+      const userInfoUrl = new URL('userinfo', config.auth0IssuerBaseUrl).toString();
+      const response = await fetch(userInfoUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const userInfo = (await response.json()) as { email?: string };
+        if (typeof userInfo.email === 'string' && userInfo.email.length > 0) {
+          claims.email = userInfo.email;
+        }
+      }
+    } catch {
+      // no-op: authorization checks will handle missing email if still absent
+    }
+  }
+
+  return claims;
 }
 
 export const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -63,7 +85,7 @@ export const requireAdmin = async (req: AuthenticatedRequest, res: Response, nex
   }
 
   const rows = await query<{ isAdmin: boolean }>(
-    `SELECT is_admin AS "isAdmin" FROM users WHERE email = $1 LIMIT 1`,
+    `SELECT is_admin AS "isAdmin" FROM users WHERE lower(email) = lower($1) LIMIT 1`,
     [email]
   );
 

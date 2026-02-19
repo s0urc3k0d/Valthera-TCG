@@ -3,6 +3,12 @@ import path from 'path';
 
 dotenv.config();
 
+const imageOutputFormat = (process.env.IMAGE_OUTPUT_FORMAT || 'webp').toLowerCase();
+const imageOutputQualityRaw = Number(process.env.IMAGE_OUTPUT_QUALITY || 78);
+const imageOutputQuality = Number.isFinite(imageOutputQualityRaw)
+  ? Math.max(1, Math.min(100, Math.round(imageOutputQualityRaw)))
+  : 78;
+
 export const config = {
   port: Number(process.env.PORT || 4000),
   databaseUrl: process.env.DATABASE_URL || '',
@@ -18,6 +24,12 @@ export const config = {
   minioSecretKey: process.env.MINIO_SECRET_KEY || '',
   minioUseSsl: (process.env.MINIO_USE_SSL || 'false') === 'true',
   minioForcePathStyle: (process.env.MINIO_FORCE_PATH_STYLE || 'true') === 'true',
+  imageOptimizationEnabled: (process.env.IMAGE_OPTIMIZATION_ENABLED || 'true') === 'true',
+  imageOutputFormat: (['original', 'webp', 'avif'].includes(imageOutputFormat) ? imageOutputFormat : 'webp') as
+    | 'original'
+    | 'webp'
+    | 'avif',
+  imageOutputQuality,
   adminEmails: (process.env.ADMIN_EMAILS || '')
     .split(',')
     .map((email) => email.trim().toLowerCase())

@@ -276,3 +276,42 @@ Pour l'état actuel de Valthera, la priorité reste:
 1. stabiliser frontend + API + Postgres + MinIO
 2. mesurer (latence API, CPU DB, endpoints les plus appelés)
 3. ajouter Redis seulement sur les endpoints réellement coûteux
+
+## 11) Re-encoder les images existantes (JPG/PNG -> WebP/AVIF)
+
+Le backend optimise les **nouvelles** images uploadées.
+Pour convertir l'existant déjà en base/MinIO:
+
+- Script: [server/scripts/migration/reencode-images.ts](server/scripts/migration/reencode-images.ts)
+- Commande: `npm run images:reencode` (dans `server/`)
+
+Variables utiles:
+
+- `DATABASE_URL` (DB cible)
+- `MINIO_ENDPOINT`, `MINIO_REGION`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_USE_SSL`, `MINIO_FORCE_PATH_STYLE`
+- `PUBLIC_API_BASE_URL` (ex: `https://api.valtheratcg.sourcekod.fr`)
+- `REENCODE_TARGET_FORMAT=webp|avif`
+- `REENCODE_QUALITY=78`
+- `DRY_RUN=true|false` (défaut: `true`)
+- `DELETE_OLD_OBJECT=true|false` (défaut: `false`)
+
+Exemple safe (analyse uniquement):
+
+```bash
+cd server
+DRY_RUN=true REENCODE_TARGET_FORMAT=webp REENCODE_QUALITY=78 npm run images:reencode
+```
+
+Exemple exécution réelle:
+
+```bash
+cd server
+DRY_RUN=false REENCODE_TARGET_FORMAT=webp REENCODE_QUALITY=78 DELETE_OLD_OBJECT=false npm run images:reencode
+```
+
+Recommandation:
+
+1. faire un backup DB + bucket MinIO
+2. lancer en `DRY_RUN=true`
+3. vérifier le résumé (`converted/skipped/failed`)
+4. lancer en `DRY_RUN=false`

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import sharp from 'sharp';
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { config } from '../config.js';
 
@@ -56,6 +57,52 @@ const readBodyBuffer = async (body: unknown): Promise<Buffer | null> => {
   return null;
 };
 
+const isOptimizableImageContentType = (contentType: string): boolean => {
+  const normalized = contentType.toLowerCase();
+  if (!normalized.startsWith('image/')) {
+    return false;
+  }
+
+  return !normalized.includes('gif') && !normalized.includes('svg');
+};
+
+const rewritePathExtension = (objectPath: string, extension: string): string => {
+  const parsed = path.posix.parse(objectPath);
+  const fileName = parsed.name || 'image';
+  if (!parsed.dir) {
+    return `${fileName}.${extension}`;
+  }
+  return `${parsed.dir}/${fileName}.${extension}`;
+};
+
+const optimizeUploadedImage = async (
+  payload: Buffer,
+  contentType: string,
+  safePath: string
+): Promise<{ buffer: Buffer; contentType: string; objectPath: string }> => {
+  if (!config.imageOptimizationEnabled || config.imageOutputFormat === 'original' || !isOptimizableImageContentType(contentType)) {
+    return { buffer: payload, contentType, objectPath: safePath };
+  }
+
+  const baseImage = sharp(payload, { failOn: 'none' }).rotate();
+
+  if (config.imageOutputFormat === 'avif') {
+    const buffer = await baseImage.avif({ quality: config.imageOutputQuality, effort: 4 }).toBuffer();
+    return {
+      buffer,
+      contentType: 'image/avif',
+      objectPath: rewritePathExtension(safePath, 'avif'),
+    };
+  }
+
+  const buffer = await baseImage.webp({ quality: config.imageOutputQuality, effort: 4 }).toBuffer();
+  return {
+    buffer,
+    contentType: 'image/webp',
+    objectPath: rewritePathExtension(safePath, 'webp'),
+  };
+};
+
 const getPublicUrl = (req: Request, bucket: string, objectPath: string): string => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   return `${baseUrl}/uploads/${bucket}/${objectPath}`;
@@ -76,7 +123,9 @@ mediaRouter.post('/upload', async (req, res) => {
       return res.status(400).json({ message: 'Empty image payload' });
     }
 
-    const { safeBucket, safePath, absolutePath } = resolveUploadPath(bucket, requestedPath);
+    const { safeBucket, safePath } = resolveUploadPath(bucket, requestedPath);
+    const optimized = await optimizeUploadedImage(payload, contentType, safePath);
+    const { absolutePath } = resolveUploadPath(safeBucket, optimized.objectPath);
 
     if (config.storageBackend === 'minio') {
       if (!s3Client) {
@@ -86,18 +135,19 @@ mediaRouter.post('/upload', async (req, res) => {
       await s3Client.send(
         new PutObjectCommand({
           Bucket: safeBucket,
-          Key: safePath,
-          Body: payload,
-          ContentType: contentType,
+          Key: optimized.objectPath,
+          Body: optimized.buffer,
+          ContentType: optimized.contentType,
+          CacheControl: 'public, max-age=31536000, immutable',
         })
       );
     } else {
       await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-      await fs.writeFile(absolutePath, payload);
+      await fs.writeFile(absolutePath, optimized.buffer);
     }
 
-    const publicPath = `/uploads/${safeBucket}/${safePath}`;
-    return res.status(201).json({ url: getPublicUrl(req, safeBucket, safePath), path: publicPath });
+    const publicPath = `/uploads/${safeBucket}/${optimized.objectPath}`;
+    return res.status(201).json({ url: getPublicUrl(req, safeBucket, optimized.objectPath), path: publicPath });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Upload failed';
     return res.status(400).json({ message });
@@ -154,17 +204,28 @@ mediaPublicRouter.get('/:bucket/*', async (req, res) => {
       );
 
       const body = output.Body;
-      if (!body || typeof (body as { transformToByteArray?: () => Promise<Uint8Array> }).transformToByteArray !== 'function') {
+      if (!body) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+
+      res.setHeader('Cache-Control', output.CacheControl || 'public, max-age=31536000, immutable');
+      if (output.ContentType) {
+        res.setHeader('Content-Type', output.ContentType);
+      }
+
+      if (typeof (body as { pipe?: (destination: NodeJS.WritableStream) => NodeJS.WritableStream }).pipe === 'function') {
+        return (body as { pipe: (destination: NodeJS.WritableStream) => NodeJS.WritableStream }).pipe(res);
+      }
+
+      if (typeof (body as { transformToByteArray?: () => Promise<Uint8Array> }).transformToByteArray !== 'function') {
         return res.status(404).json({ message: 'File not found' });
       }
 
       const bytes = await (body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray();
-      if (output.ContentType) {
-        res.setHeader('Content-Type', output.ContentType);
-      }
       return res.send(Buffer.from(bytes));
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     return res.sendFile(absolutePath);
   } catch (error) {
     return res.status(404).json({ message: 'File not found' });

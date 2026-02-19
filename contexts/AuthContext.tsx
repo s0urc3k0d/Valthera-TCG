@@ -89,11 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const user = await supabaseService.getUserByEmail(email);
       if (user) {
-        // Clean up ghost data first
-        console.log('🧹 Cleaning up ghost data for user:', user.id);
-        await supabaseService.cleanupAllUserData(user.id);
-        
-        // Then load the cleaned collection
+        void supabaseService.cleanupAllUserData(user.id).catch(() => undefined);
         const collection = await supabaseService.getUserCollection(user.id);
         return { ...user, collection };
       }
@@ -108,28 +104,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('🔐 Init Auth - URL:', window.location.href);
-        
         // Vérifier si on revient d'un redirect Auth0
         if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
-          console.log('🔐 Detected Auth0 callback, handling redirect...');
           try {
             await auth0Client.handleRedirectCallback();
-            console.log('🔐 Redirect callback handled successfully');
             // Nettoyer l'URL
             window.history.replaceState({}, document.title, window.location.pathname);
           } catch (callbackError) {
-            console.error('🔐 Redirect callback error:', callbackError);
+            console.error('Redirect callback error:', callbackError);
           }
         }
 
         // Vérifier si l'utilisateur est connecté à Auth0
         const isAuthenticated = await auth0Client.isAuthenticated();
-        console.log('🔐 Is authenticated:', isAuthenticated);
         
         if (isAuthenticated) {
           const auth0User = await auth0Client.getUser() as Auth0UserInfo | undefined;
-          console.log('🔐 Auth0 user:', auth0User);
           
           if (auth0User?.email) {
             const accessToken = await auth0Client.getTokenSilently().catch(() => null);
@@ -142,8 +132,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // Vérifier si l'utilisateur existe dans Supabase
             const supabaseUser = await checkUserInSupabase(auth0User.email);
-            console.log('🔐 Supabase user:', supabaseUser);
-            console.log('🔐 lastBoosterDate from Supabase:', supabaseUser?.lastBoosterDate);
             
             if (supabaseUser) {
               // Utilisateur existe, connexion complète
@@ -158,7 +146,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               });
             } else {
               // Utilisateur Auth0 mais pas de profil Supabase -> besoin de setup
-              console.log('🔐 User needs profile setup');
               setState({
                 isAuthenticated: true,
                 isLoading: false,
@@ -173,7 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         // Pas connecté
-        console.log('🔐 Not authenticated, clearing storage');
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(AUTH0_USER_KEY);
         localStorage.removeItem(AUTH0_ACCESS_TOKEN_KEY);

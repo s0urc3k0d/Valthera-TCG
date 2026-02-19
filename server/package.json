@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "images:reencode": "tsx scripts/migration/reencode-images.ts",
     "test:integration": "npm run test:integration:trade && npm run test:integration:users-notifications",
     "test:integration:trade": "bash scripts/integration/test_atomic_trade_accept.sh",
     "test:integration:users-notifications": "bash scripts/integration/test_users_notifications_validation.sh"
@@ -20,6 +21,7 @@
     "helmet": "^8.0.0",
     "jose": "^5.9.6",
     "pg": "^8.13.1",
+    "sharp": "^0.34.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {
