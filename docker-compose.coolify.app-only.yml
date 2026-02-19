@@ -42,7 +42,7 @@ services:
       retries: 8
       start_period: 20s
     networks:
-      - public
+      - coolify
 
   frontend:
     build:
@@ -76,10 +76,11 @@ services:
       retries: 8
       start_period: 20s
     networks:
-      - public
+      - coolify
 
 volumes:
   uploads_data:
 
 networks:
-  public:
+  coolify:
+    external: true
