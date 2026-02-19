@@ -4,10 +4,62 @@ import { requireAdmin } from '../middleware/auth.js';
 
 export const seriesRouter = Router();
 
+type SeriesColumns = {
+  setting: boolean;
+  totalCards: boolean;
+  coverImage: boolean;
+  releaseDate: boolean;
+  isActive: boolean;
+  createdAt: boolean;
+  updatedAt: boolean;
+};
+
+let seriesColumnsCache: SeriesColumns | undefined;
+
+const getSeriesColumns = async (): Promise<SeriesColumns> => {
+  if (seriesColumnsCache) {
+    return seriesColumnsCache;
+  }
+
+  const rows = await query<{ columnName: string }>(
+    `SELECT column_name AS "columnName"
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'series'`
+  );
+
+  const set = new Set(rows.map((row) => row.columnName));
+  seriesColumnsCache = {
+    setting: set.has('setting'),
+    totalCards: set.has('total_cards'),
+    coverImage: set.has('cover_image'),
+    releaseDate: set.has('release_date'),
+    isActive: set.has('is_active'),
+    createdAt: set.has('created_at'),
+    updatedAt: set.has('updated_at'),
+  };
+
+  return seriesColumnsCache;
+};
+
+const getSeriesSelect = async () => {
+  const cols = await getSeriesColumns();
+  return `id,
+          name,
+          description,
+          ${cols.setting ? 'setting' : 'NULL::text'} AS "setting",
+          ${cols.totalCards ? 'total_cards' : '0'} AS "totalCards",
+          ${cols.coverImage ? 'cover_image' : 'NULL::text'} AS "coverImage",
+          ${cols.releaseDate ? 'release_date' : 'NULL::date'} AS "releaseDate",
+          ${cols.isActive ? 'is_active' : 'true'} AS "isActive",
+          ${cols.createdAt ? 'created_at' : 'NOW()'} AS "createdAt",
+          ${cols.updatedAt ? 'updated_at' : cols.createdAt ? 'created_at' : 'NOW()'} AS "updatedAt"`;
+};
+
 seriesRouter.get('/', async (_req, res) => {
+  const select = await getSeriesSelect();
   const rows = await query(
-    `SELECT id, name, description, setting, total_cards AS "totalCards", cover_image AS "coverImage",
-            release_date AS "releaseDate", is_active AS "isActive", created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${select}
      FROM series
      ORDER BY name ASC`
   );
@@ -15,9 +67,9 @@ seriesRouter.get('/', async (_req, res) => {
 });
 
 seriesRouter.get('/:id', async (req, res) => {
+  const select = await getSeriesSelect();
   const rows = await query(
-    `SELECT id, name, description, setting, total_cards AS "totalCards", cover_image AS "coverImage",
-            release_date AS "releaseDate", is_active AS "isActive", created_at AS "createdAt", updated_at AS "updatedAt"
+    `SELECT ${select}
      FROM series
      WHERE id = $1
      LIMIT 1`,
