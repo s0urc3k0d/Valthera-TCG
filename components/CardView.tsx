@@ -47,10 +47,10 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
   const cardRef = useRef<HTMLDivElement>(null);
 
   const sizeClasses = {
-    xs: 'w-24 h-36 text-[8px]',
-    sm: 'w-36 h-52 text-xs',
-    md: 'w-52 h-80',
-    lg: 'w-72 h-[430px]',
+    xs: 'w-24 h-[8.4rem] text-[8px]',
+    sm: 'w-36 h-[12.6rem] text-xs',
+    md: 'w-52 h-[18.2rem]',
+    lg: 'w-72 h-[25.2rem]',
   };
 
   const isSpecialRarity = card.rarity === Rarity.EPIC || card.rarity === Rarity.LEGENDARY;
@@ -73,9 +73,12 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={`relative w-full h-full duration-700 card-preserve-3d transition-all ${isRevealed ? '' : 'rotate-y-180'}`}>
+      <div className={`relative w-full h-full duration-700 card-preserve-3d transition-all ${isRevealed ? '' : 'rotate-y-180'}`} style={{ transformStyle: 'preserve-3d' }}>
         {/* Front of Card */}
-        <div className={`absolute w-full h-full bg-gradient-to-b from-valthera-800 to-valthera-900 border-2 rounded-xl overflow-hidden card-backface-hidden flex flex-col ${rarityColors[card.rarity]} shadow-xl`}>
+        <div
+          className={`absolute w-full h-full bg-gradient-to-b from-valthera-800 to-valthera-900 border-2 rounded-xl overflow-hidden card-backface-hidden flex flex-col ${rarityColors[card.rarity]} shadow-xl`}
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
+        >
           
           {/* Holographic overlay for Legendary */}
           {card.rarity === Rarity.LEGENDARY && !disableEffects && isHovering && (
@@ -107,7 +110,7 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
           )}
 
           {/* Card Header */}
-          <div className="relative h-[45%] overflow-hidden border-b border-valthera-700">
+          <div className="relative h-[45%] shrink-0 overflow-hidden border-b border-valthera-700">
              <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
              <div className="absolute inset-0 bg-gradient-to-t from-valthera-900/80 to-transparent"></div>
              
@@ -125,16 +128,16 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
           </div>
           
           {/* Card Body */}
-          <div className={`flex-1 flex flex-col justify-between relative z-30 ${size === 'xs' ? 'p-1.5' : 'p-3'}`}>
-            <div>
-                <h3 className={`font-medieval font-bold uppercase tracking-wider line-clamp-2 ${rarityText[card.rarity]} ${
+          <div className={`flex-1 flex flex-col relative z-30 ${size === 'xs' ? 'p-1.5' : 'p-3'}`}>
+            <div className="flex-1">
+              <h3 className={`font-medieval font-bold uppercase tracking-wider line-clamp-2 min-h-[2.5em] ${rarityText[card.rarity]} ${
                 size === 'xs' ? 'text-[8px] leading-tight' :
                 size === 'sm' ? 'text-xs' : 'text-base'
               }`}>
                 {card.name}
               </h3>
                 {size !== 'xs' && (
-                  <p className={`italic text-valthera-400 min-h-[16px] ${size === 'sm' ? 'text-[10px] line-clamp-1' : 'text-xs line-clamp-1'}`}>
+                <p className={`italic text-valthera-400 min-h-[16px] ${size === 'sm' ? 'text-[10px] line-clamp-1' : 'text-xs line-clamp-1'}`}>
                     {card.title || ' '}
                   </p>
                 )}
@@ -144,14 +147,14 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
                 </div>
               )}
               {size !== 'xs' && (
-                  <p className={`text-valthera-200 mt-2 font-body leading-relaxed min-h-[38px] ${size === 'sm' ? 'text-[9px] leading-tight line-clamp-2' : 'text-xs line-clamp-3'}`}>
+                <p className={`text-valthera-200 mt-2 font-body leading-relaxed ${size === 'sm' ? 'text-[9px] leading-tight line-clamp-2 min-h-[2.5em]' : 'text-xs line-clamp-3 min-h-[4em]'}`}>
                   {card.description}
                 </p>
               )}
               
               {/* Abilities */}
               {card.abilities && card.abilities.length > 0 && size !== 'sm' && size !== 'xs' && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 min-h-[22px] flex flex-wrap gap-1">
                   {card.abilities.slice(0, 2).map((ability, idx) => (
                     <span key={idx} className="text-[10px] bg-valthera-700/50 text-valthera-300 px-2 py-0.5 rounded border border-valthera-600">
                       {ability}
@@ -166,7 +169,7 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
             
             {/* Footer */}
             {size !== 'xs' && (
-              <div className="flex justify-between items-center text-[10px] text-valthera-500 border-t border-valthera-700 pt-2 mt-2">
+              <div className="flex justify-between items-center text-[10px] text-valthera-500 border-t border-valthera-700 pt-2 mt-2 h-6">
                  <span className="truncate max-w-[60%]">#{card.id}</span>
               </div>
             )}
@@ -174,7 +177,10 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
         </div>
 
         {/* Back of Card */}
-        <div className="absolute w-full h-full bg-gradient-to-br from-valthera-800 to-valthera-900 rounded-xl card-backface-hidden rotate-y-180 border-2 border-valthera-400 flex items-center justify-center shadow-2xl overflow-hidden">
+        <div
+          className="absolute w-full h-full bg-gradient-to-br from-valthera-800 to-valthera-900 rounded-xl card-backface-hidden rotate-y-180 border-2 border-valthera-400 flex items-center justify-center shadow-2xl overflow-hidden"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+        >
           <div className="absolute inset-0 opacity-20">
             <div className="w-full h-full" style={{backgroundImage: 'radial-gradient(circle, #C9A227 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
           </div>

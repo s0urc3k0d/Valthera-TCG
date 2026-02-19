@@ -126,12 +126,12 @@ const CardDetail: React.FC<CardDetailProps> = ({
             <div 
               className={`relative aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
               onClick={() => setIsFlipped(!isFlipped)}
-              style={{ transformStyle: 'preserve-3d' }}
+              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
             >
               {/* Front */}
               <div 
                 className={`absolute inset-0 backface-hidden rounded-lg border-2 ${colors.border} overflow-hidden shadow-xl ${colors.glow}`}
-                style={{ backfaceVisibility: 'hidden' }}
+                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
               >
                 <img 
                   src={card.imageUrl || 'https://placehold.co/400x560/1a1a2e/d4af37?text=Valthera+TCG'} 
@@ -166,14 +166,22 @@ const CardDetail: React.FC<CardDetailProps> = ({
               
               {/* Back (Lore) */}
               <div 
-                className={`absolute inset-0 backface-hidden bg-gradient-to-b ${colors.bg} border-2 ${colors.border} rounded-lg flex items-center justify-center p-6 rotate-y-180`}
-                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                className={`absolute inset-0 backface-hidden bg-gradient-to-b ${colors.bg} border-2 ${colors.border} rounded-lg overflow-hidden rotate-y-180`}
+                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
               >
-                <div className="text-center">
-                  <h4 className="font-medieval text-valthera-400 text-lg mb-4">Histoire</h4>
-                  <p className="text-stone-300 italic leading-relaxed">
-                    {card.lore || card.description}
-                  </p>
+                <img
+                  src="/card-back-placeholder.svg"
+                  alt="Dos de carte Valthera"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />
+                <div className="relative z-10 h-full w-full flex items-center justify-center p-6">
+                  <div className="max-w-[90%] text-center bg-black/40 border border-valthera-400/40 rounded-xl p-4">
+                    <h4 className="font-medieval text-valthera-300 text-lg mb-3">Histoire (optionnel)</h4>
+                    <p className="text-stone-200 italic leading-relaxed text-sm md:text-base">
+                      {card.lore?.trim() ? card.lore : 'Aucun texte de lore pour cette carte pour le moment.'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -466,15 +466,16 @@ export const Collection: React.FC = () => {
             const isOwned = count > 0;
 
             return (
-              <div key={card.id} className="relative flex flex-col items-center gap-2">
+              <div key={card.id} className="relative flex flex-col items-center gap-2 h-full">
                 <div 
                   className={`${isOwned ? 'cursor-pointer hover:scale-105 transition-transform' : 'opacity-40 grayscale pointer-events-none'}`}
                   onClick={() => isOwned && setSelectedCard(card)}
                 >
                    <CardView card={card} size="md" />
                 </div>
+                <div className="h-7 flex items-center justify-center">
                 {isOwned ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-[72px] justify-center">
                       <div className="bg-valthera-500 text-valthera-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg border border-valthera-400">
                           x{count}
                       </div>
@@ -484,6 +485,7 @@ export const Collection: React.FC = () => {
                 ) : (
                     <div className="text-xs text-valthera-600 font-medium py-1">🔒 Non acquise</div>
                 )}
+                </div>
               </div>
             );
           })}
