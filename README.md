@@ -50,6 +50,7 @@ Le projet est maintenant prêt pour un déploiement via `Dockerfile` (Coolify ou
 - Dockerfile: [Dockerfile](Dockerfile)
 - Nginx container config: [nginx/app.conf](nginx/app.conf)
 - Variables d'environnement exemple: [.env.example](.env.example)
+- Runbook déploiement Coolify: [DEPLOYMENT_COOLIFY.md](DEPLOYMENT_COOLIFY.md)
 
 Variable clé côté frontend build:
 
