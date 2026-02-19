@@ -67,8 +67,6 @@ services:
       - /var/cache/nginx
       - /var/run
       - /tmp
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
     healthcheck:
