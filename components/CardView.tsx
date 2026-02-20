@@ -73,10 +73,18 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={`relative w-full h-full duration-700 card-preserve-3d transition-all ${isRevealed ? '' : 'rotate-y-180'}`} style={{ transformStyle: 'preserve-3d' }}>
+      <div
+        className="relative w-full h-full transition-all"
+        style={{
+          transformStyle: 'preserve-3d',
+          WebkitTransformStyle: 'preserve-3d',
+          transform: isRevealed ? 'rotateY(0deg)' : 'rotateY(180deg)',
+          transition: 'transform 700ms ease'
+        }}
+      >
         {/* Front of Card */}
         <div
-          className={`absolute w-full h-full bg-gradient-to-b from-valthera-800 to-valthera-900 border-2 rounded-xl overflow-hidden card-backface-hidden flex flex-col ${rarityColors[card.rarity]} shadow-xl`}
+          className={`absolute w-full h-full bg-gradient-to-b from-valthera-800 to-valthera-900 border-2 rounded-xl overflow-hidden flex flex-col ${rarityColors[card.rarity]} shadow-xl`}
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
         >
           
@@ -178,13 +186,11 @@ export const CardView: React.FC<CardViewProps> = ({ card, isRevealed = true, onC
 
         {/* Back of Card */}
         <div
-          className="absolute w-full h-full bg-gradient-to-br from-valthera-800 to-valthera-900 rounded-xl card-backface-hidden rotate-y-180 border-2 border-valthera-400 flex items-center justify-center shadow-2xl overflow-hidden"
-          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          className="absolute w-full h-full bg-valthera-900 rounded-xl border-2 border-valthera-400 flex items-center justify-center shadow-2xl overflow-hidden"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full" style={{backgroundImage: 'radial-gradient(circle, #C9A227 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
-          </div>
-          <div className="absolute inset-3 border-2 border-dashed border-valthera-500/30 rounded-lg"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,162,39,0.16),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(201,162,39,0.12),transparent_40%)]"></div>
+          <div className="absolute inset-3 border border-valthera-500/35 rounded-lg"></div>
           <div className="text-center z-10">
             <div className="w-16 h-16 mx-auto mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full">

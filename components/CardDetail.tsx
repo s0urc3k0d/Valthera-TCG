@@ -121,16 +121,21 @@ const CardDetail: React.FC<CardDetailProps> = ({
 
         <div className="grid md:grid-cols-2 gap-6 p-6">
           {/* Card Image Side */}
-          <div className="relative">
+          <div className="relative [perspective:1400px]">
             {/* Card with flip animation */}
             <div 
-              className={`relative aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
+              className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer"
               onClick={() => setIsFlipped(!isFlipped)}
-              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
+              style={{
+                transformStyle: 'preserve-3d',
+                WebkitTransformStyle: 'preserve-3d',
+                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                transition: 'transform 700ms ease'
+              }}
             >
               {/* Front */}
               <div 
-                className={`absolute inset-0 backface-hidden rounded-lg border-2 ${colors.border} overflow-hidden shadow-xl ${colors.glow}`}
+                className={`absolute inset-0 rounded-lg border-2 ${colors.border} overflow-hidden shadow-xl ${colors.glow}`}
                 style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
               >
                 <img 
@@ -166,18 +171,15 @@ const CardDetail: React.FC<CardDetailProps> = ({
               
               {/* Back (Lore) */}
               <div 
-                className={`absolute inset-0 backface-hidden bg-gradient-to-b ${colors.bg} border-2 ${colors.border} rounded-lg overflow-hidden rotate-y-180`}
+                className={`absolute inset-0 bg-gradient-to-b ${colors.bg} border-2 ${colors.border} rounded-lg overflow-hidden`}
                 style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
               >
-                <img
-                  src="/card-back-placeholder.svg"
-                  alt="Dos de carte Valthera"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />
+                <div className="absolute inset-0 bg-valthera-900" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,162,39,0.16),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(201,162,39,0.12),transparent_40%)]" />
+                <div className="absolute inset-3 border border-valthera-500/35 rounded-lg" />
                 <div className="relative z-10 h-full w-full flex items-center justify-center p-6">
-                  <div className="max-w-[90%] text-center bg-black/40 border border-valthera-400/40 rounded-xl p-4">
-                    <h4 className="font-medieval text-valthera-300 text-lg mb-3">Histoire (optionnel)</h4>
+                  <div className="max-w-[92%] text-center bg-black/35 border border-valthera-400/45 rounded-xl p-4">
+                    <h4 className="font-medieval text-valthera-300 text-lg mb-3">Lore</h4>
                     <p className="text-stone-200 italic leading-relaxed text-sm md:text-base">
                       {card.lore?.trim() ? card.lore : 'Aucun texte de lore pour cette carte pour le moment.'}
                     </p>
